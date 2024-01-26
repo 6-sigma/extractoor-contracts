@@ -15,10 +15,7 @@ contract L2OptimismBedrockStateProverTest is Test {
 
     function setUp() public {
         lightClient = new MockLightClient(address(this));
-        prover = new L2OptimismBedrockStateProver(
-            address(lightClient),
-            0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0
-        );
+        prover = new L2OptimismBedrockStateProver();
     }
 
     function testProve() public {
@@ -57,6 +54,8 @@ contract L2OptimismBedrockStateProverTest is Test {
         });
 
         bool inState = prover.proveInOptimismState(
+            address(lightClient),
+            0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0,
             l1BlockNumber,
             l2OutputIndex,
             outputProof,

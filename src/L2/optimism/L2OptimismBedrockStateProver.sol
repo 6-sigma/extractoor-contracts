@@ -12,15 +12,15 @@ import {ILightClient} from "./../ILightClient.sol";
 /// @dev Stage 1 is verification that the output root exists inside the Optimism Bedrock Output Oracle via MPT Proof
 /// @dev Stage 2 uses the state root inside the output root and performs MPT inclusion proving for data inside
 contract L2OptimismBedrockStateProver is OptimismBedrockStateProver {
-    ILightClient public immutable lightClient;
+    // ILightClient public immutable lightClient;
 
-    address public immutable berdockOutputOracleAddress;
+    // address public immutable berdockOutputOracleAddress;
 
     uint256 public constant outputOracleOutputProofsSlotPosition = 3;
 
-    constructor(address _lightClient, address _oracleAddress) {
-        lightClient = ILightClient(_lightClient);
-        berdockOutputOracleAddress = _oracleAddress;
+    constructor() {
+        // lightClient = ILightClient(_lightClient);
+        // berdockOutputOracleAddress = _oracleAddress;
     }
 
     /// @notice Internal method to verify that the output root corresponding to the output proof exists inside the Optimism Bedrock Output Oracle for the given index
@@ -29,11 +29,13 @@ contract L2OptimismBedrockStateProver is OptimismBedrockStateProver {
     /// @param outputProof The MPT proof data to verify that the given output root is contained inside the OutputOracle for the expected index
     /// @return isValid if the output root is indeed there
     function proveOutputRoot(
+        address lightClient,
+        address outputOracle,
         uint64 blockNumber,
         uint256 outputIndex,
         Types.OutputRootMPTProof calldata outputProof
     ) internal view returns (bool isValid) {
-        bytes32 l1StateRoot = lightClient.executionStateRoot(blockNumber);
+        bytes32 l1StateRoot = ILightClient(lightClient).executionStateRoot(blockNumber);
 
         // See https://github.com/ethereum-optimism/optimism/blob/develop/specs/proposals.md#l2-output-commitment-construction
         bytes32 calculatedOutputRoot = keccak256(
@@ -53,7 +55,7 @@ contract L2OptimismBedrockStateProver is OptimismBedrockStateProver {
         return
             this.verifyStateProof(
                 l1StateRoot,
-                berdockOutputOracleAddress,
+                outputOracle,
                 bytes32(targetSlot),
                 uint256(calculatedOutputRoot),
                 outputProof.optimismStateProofsBlob
@@ -69,6 +71,8 @@ contract L2OptimismBedrockStateProver is OptimismBedrockStateProver {
     /// @param expectedValue The expected value to be in the storage slot
     /// @return isValid if the expected value is indeed there
     function proveInOptimismState(
+        address lightClient,
+        address outputOracle,
         uint64 blockNumber,
         uint256 outputIndex,
         Types.OutputRootMPTProof calldata outputProof,
@@ -76,7 +80,7 @@ contract L2OptimismBedrockStateProver is OptimismBedrockStateProver {
         uint256 expectedValue
     ) public view returns (bool isValid) {
         require(
-            proveOutputRoot(blockNumber, outputIndex, outputProof),
+            proveOutputRoot(lightClient, outputOracle, blockNumber, outputIndex, outputProof),
             "Optimism root state was not found in L1"
         );
         return
